@@ -25,3 +25,45 @@ Extra check: `INSERT INTO students (id, ...) VALUES (100, ...)` gives `428C9: ca
 None of the commands changed the data: after the experiments the tables still hold 6, 3 and 6 rows. The student numbers have gaps (experiment 4 used up number 4): identity guarantees unique numbers, not consecutive ones.
 
 **Why check in the database if Pydantic already checks the name length?** Pydantic protects only requests that go through our API. The database is also written to by other code: migrations, `seed.sql`, admin scripts, psql sessions, a future second service. The CHECK in the database is the last line of defense that holds for every writer, and it keeps the data correct even if someone removes or breaks the check in the code.
+
+## Index: EXPLAIN before and after
+
+Query: `SELECT * FROM enrollments WHERE student_id = 777;`
+Database idx_demo: 500 courses, 20,000 students, 50,000 enrollments (`experiments/idx_data.sql`).
+
+| | Before the index | After the index |
+|---|------------------|-----------------|
+| Access method | Seq Scan on enrollments | Bitmap Index Scan on `enrollments_student_id_idx` + Bitmap Heap Scan |
+| cost | 0.00..1042.00 | 4.31..15.59 |
+| Rows Removed by Filter | 49997 | — (only the 3 needed rows are read) |
+| Execution Time (best of 3) | 1.961 ms | 0.006 ms |
+
+Before the index:
+
+```
+Seq Scan on enrollments  (cost=0.00..1042.00 rows=3 width=34) (actual time=0.038..1.957 rows=3 loops=1)
+  Filter: (student_id = 777)
+  Rows Removed by Filter: 49997
+Planning Time: 0.009 ms
+Execution Time: 1.961 ms
+```
+
+After `CREATE INDEX enrollments_student_id_idx ON enrollments (student_id);`:
+
+```
+Bitmap Heap Scan on enrollments  (cost=4.31..15.59 rows=3 width=34) (actual time=0.002..0.003 rows=3 loops=1)
+  Recheck Cond: (student_id = 777)
+  Heap Blocks: exact=3
+  ->  Bitmap Index Scan on enrollments_student_id_idx  (cost=0.00..4.31 rows=3 width=0) (actual time=0.001..0.001 rows=3 loops=1)
+        Index Cond: (student_id = 777)
+Planning Time: 0.011 ms
+Execution Time: 0.006 ms
+```
+
+The other two queries already used indexes: `email` — Index Scan using `students_email_key`; `course_id` — Bitmap Index Scan on `enrollments_course_id_student_id_key`. The index costs space: the table takes 3336 kB, the index 896 kB, and every insert, update and delete has to update the index too.
+
+Answers to the questions:
+
+1. PostgreSQL creates an index automatically only for PRIMARY KEY and UNIQUE, because it needs one to check uniqueness. A FOREIGN KEY gets no index. `email` is UNIQUE, and `course_id` is the first column of the UNIQUE pair `(course_id, student_id)`, so a search by `course_id` can use that index. `student_id` is the second column of the pair, and the pair's index doesn't help a search on the second column alone.
+2. The planner compares costs. The six rows of `courses` fit on one data page, so reading the whole table (cost 1.07) is cheaper than going through the index first. On `enrollments` with 50,000 rows a full scan reads 1042 cost units, and the index finds 3 rows for about 15.
+3. Getting one student's enrollments (`WHERE student_id = ...`), and deleting a student: `ON DELETE CASCADE` has to find all the enrollments of that student, and without the index it would scan the whole `enrollments` table on every delete.

@@ -25,3 +25,6 @@ CREATE TABLE enrollments (
     enrolled_at timestamptz NOT NULL DEFAULT now(),
     UNIQUE (course_id, student_id)
 );
+
+-- Index on the foreign key student_id (step 6): PostgreSQL doesn't create one.
+CREATE INDEX enrollments_student_id_idx ON enrollments (student_id);
