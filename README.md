@@ -2,6 +2,69 @@
 
 PostgreSQL schema for the course catalog (Lab 6, "Advanced Web Technologies").
 
+## How to run
+
+PostgreSQL 16 or newer is required. Once, as the `postgres` superuser:
+
+```sql
+CREATE ROLE catalog_app LOGIN PASSWORD 'change-me';
+CREATE DATABASE course_catalog OWNER catalog_app;
+```
+
+Then, from the project folder (it stops at the first error):
+
+```bash
+psql -h localhost -U catalog_app -d course_catalog -v ON_ERROR_STOP=1 -f schema.sql
+psql -h localhost -U catalog_app -d course_catalog -v ON_ERROR_STOP=1 -f seed.sql
+psql -h localhost -U catalog_app -d course_catalog -v ON_ERROR_STOP=1 -f queries.sql
+```
+
+The password `change-me` is for teaching; real projects keep passwords out of git.
+
+For the index experiment, a throwaway database is used: `CREATE DATABASE idx_demo OWNER catalog_app;`, then `\i schema.sql` and `\i experiments/idx_data.sql` in it.
+
+| File | What it holds |
+| --- | --- |
+| `schema.sql` | the three tables, keys, constraints, the index on `enrollments.student_id` |
+| `seed.sql` | 6 courses, 3 students, 6 enrollments |
+| `queries.sql` | queries for the API routes (list, one course, like, enroll, enrollments, statistics) |
+| `experiments/idx_data.sql` | 500 courses, 20,000 students and 50,000 enrollments for the index experiment |
+
+## Schema
+
+```mermaid
+erDiagram
+    COURSES ||--o{ ENROLLMENTS : "course enrollments"
+    STUDENTS ||--o{ ENROLLMENTS : "student enrollments"
+    COURSES {
+        text id PK "course slug"
+        text title
+        text description
+        integer credits
+        boolean is_elective
+        integer likes
+    }
+    STUDENTS {
+        bigint id PK
+        text name
+        text email UK
+    }
+    ENROLLMENTS {
+        bigint id PK
+        text course_id FK
+        bigint student_id FK
+        timestamptz enrolled_at
+    }
+```
+
+There are three tables: `courses`, `students` and `enrollments`. A course has many enrollments and a student has many enrollments; each enrollment belongs to exactly one course and one student. Courses and students are linked "many-to-many" through `enrollments`, and the UNIQUE pair `(course_id, student_id)` keeps a student from enrolling in the same course twice.
+
+## Design decisions
+
+- **`courses.id` is text (a slug), `students.id` is an automatic number.** A course slug like `modern-frontend` is stable, readable and already used in the API URLs (`/courses/modern-frontend`), so it works as a natural key; the downside is that it is longer than a number and renaming it means updating every enrollment. Students have no natural identifier: an email can change, and two people can have the same name, so the database issues a surrogate `bigint` number that never changes and is cheap to index; the downside is that the number says nothing by itself and needs a JOIN to show a name.
+- **`RESTRICT` on `enrollments.course_id`, `CASCADE` on `enrollments.student_id`.** A course with enrollments is important data: deleting it by mistake would silently erase students' enrollments, so the database refuses (409 in the API) and a person has to decide what to do with the enrollments first. When a student is deleted (for example, their account is removed), their enrollments make no sense without them, so they are deleted together with the student.
+- **`timestamptz`, not `timestamp`; `text`, not `varchar(n)`.** `timestamptz` stores a precise moment in UTC and shows it in the client's time zone, so the server and users in different time zones agree on when an enrollment happened; a plain `timestamp` doesn't know which zone it is in. In PostgreSQL `text` and `varchar(n)` are stored the same way and are equally fast; a length limit `n` is a business rule, and it is clearer to write such a rule as a CHECK (like `length(name) >= 2`) than to hide it in the type.
+
 ## Constraint violation log
 
 Commands were run with `\set VERBOSITY verbose` on clean data (6 courses, 3 students, 6 enrollments).
@@ -75,3 +138,15 @@ Scenario: enroll a new student in a course — two inserts in one transaction.
 - **The second insert failed.** After `BEGIN`, the student Madina Ospanova was inserted (`INSERT 0 1`), and the enrollment in `no-such-course` failed with `ERROR: insert or update on table "enrollments" violates foreign key constraint "enrollments_course_id_fkey"`. The prompt changed to `=!>`: the transaction was aborted, and even a harmless `SELECT count(*) FROM students` was rejected with `current transaction is aborted, commands ignored until end of transaction block`. After `ROLLBACK`, `SELECT count(*) FROM students WHERE email = 'madina@example.com'` returned 0: the first insert was rolled back too, although it was correct on its own.
 - **The successful variant in two windows.** Window A ran `BEGIN`, inserted Madina and her enrollment in `web-security`, and didn't commit yet. Window B saw `count = 0` for Madina before `COMMIT` and `count = 1` right after it: both rows appeared at once. The isolation level is `read committed` (`SHOW default_transaction_isolation`): other clients see only committed data. After the commit the database held 4 students and 7 enrollments.
 - **Without a transaction**, the first insert would have stayed in the database when the second one failed: a student without an enrollment, "half an operation". The client would get an error, try again, and the second attempt would fail on the duplicate email (`students_email_key`), so the data would have to be fixed by hand.
+
+## Self-review against the checklist
+
+| What to check | Result |
+|---------------|--------|
+| Keys | yes: every table has a primary key (`courses.id`, `students.id`, `enrollments.id`), and both relationships have foreign keys (`enrollments.course_id`, `enrollments.student_id`) |
+| Types | yes: identifiers are `bigint` (identity) or a `text` slug, the moment of enrollment is `timestamptz`, counters are `integer`, the flag is `boolean`; there is no money in the schema |
+| Required values | yes: every column is `NOT NULL`, because every field in the domain rules is required; optional values don't exist in this schema |
+| Constraints | yes: CHECK `credits > 0`, `likes >= 0`, `length(name) >= 2`; UNIQUE on `email` and on `(course_id, student_id)`; the name rule matches `Field(min_length=2)` in Pydantic |
+| Deletion | yes: `RESTRICT` for courses (a course with enrollments can't be deleted by mistake), `CASCADE` for students (their enrollments go with them) — both chosen deliberately and checked in the log |
+| Normalization | yes: each fact is stored once — the course title only in `courses`, the student's name and email only in `students`; `enrollments` holds only references; there are no lists in a cell |
+| Indexes and names | yes: an index on the foreign key `enrollments.student_id`; `course_id` is covered by the UNIQUE pair index; no extra indexes; names are snake_case, tables are plural, foreign keys are `<table>_id` |
