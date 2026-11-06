@@ -28,9 +28,14 @@ For the index experiment, a throwaway database is used: `CREATE DATABASE idx_dem
 | `schema.sql` | the three tables, keys, constraints, the index on `enrollments.student_id` |
 | `seed.sql` | 6 courses, 3 students, 6 enrollments |
 | `queries.sql` | queries for the API routes (list, one course, like, enroll, enrollments, statistics) |
+| `docs/er-diagram.png`, `docs/er-diagram.svg` | the ER diagram as an image |
 | `experiments/idx_data.sql` | 500 courses, 20,000 students and 50,000 enrollments for the index experiment |
 
 ## Schema
+
+![ER diagram of course_catalog](docs/er-diagram.png)
+
+The same diagram as an image: [`docs/er-diagram.png`](docs/er-diagram.png), vector version [`docs/er-diagram.svg`](docs/er-diagram.svg). Below it is in Mermaid text form:
 
 ```mermaid
 erDiagram

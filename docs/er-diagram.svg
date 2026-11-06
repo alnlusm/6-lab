@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="420" viewBox="0 0 1160 420" font-family="Segoe UI, Helvetica, Arial, sans-serif">
+<rect width="1160" height="420" fill="#ffffff"/>
+<text x="580" y="38" text-anchor="middle" font-size="20" font-weight="700" fill="#5c1a33">course_catalog — ER diagram</text>
+<rect x="20" y="70" width="300" height="206" rx="8" fill="#fff"/>
+<path d="M20 108 V78 a8 8 0 0 1 8 -8 H312 a8 8 0 0 1 8 8 V108 Z" fill="#f9d1e0" stroke="#d6336c" stroke-width="1.5"/>
+<text x="170.0" y="95" text-anchor="middle" font-size="16" font-weight="700" fill="#5c1a33">courses</text>
+<rect x="30" y="114" width="28" height="16" rx="4" fill="#d6336c"/><text x="44" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">PK</text>
+<text x="68" y="127" font-size="14" fill="#212529" font-family="Consolas, monospace">id</text>
+<text x="308" y="127" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<rect x="21" y="136" width="298" height="28" fill="#fff5f8"/>
+<text x="68" y="155" font-size="14" fill="#212529" font-family="Consolas, monospace">title</text>
+<text x="308" y="155" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<text x="68" y="183" font-size="14" fill="#212529" font-family="Consolas, monospace">description</text>
+<text x="308" y="183" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<rect x="21" y="192" width="298" height="28" fill="#fff5f8"/>
+<text x="68" y="211" font-size="14" fill="#212529" font-family="Consolas, monospace">credits</text>
+<text x="308" y="211" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">integer</text>
+<text x="68" y="239" font-size="14" fill="#212529" font-family="Consolas, monospace">is_elective</text>
+<text x="308" y="239" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">boolean</text>
+<rect x="21" y="248" width="298" height="28" fill="#fff5f8"/>
+<text x="68" y="267" font-size="14" fill="#212529" font-family="Consolas, monospace">likes</text>
+<text x="308" y="267" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">integer</text>
+<rect x="20" y="70" width="300" height="206" rx="8" fill="none" stroke="#d6336c" stroke-width="1.5"/>
+<text x="24" y="300" font-size="12" fill="#868e96">NOT NULL: all columns</text>
+<text x="24" y="318" font-size="12" fill="#868e96">CHECK credits > 0</text>
+<text x="24" y="336" font-size="12" fill="#868e96">CHECK likes >= 0</text>
+<text x="24" y="354" font-size="12" fill="#868e96">DEFAULT is_elective = false, likes = 0</text>
+<rect x="430" y="70" width="300" height="178" rx="8" fill="#fff"/>
+<path d="M430 108 V78 a8 8 0 0 1 8 -8 H722 a8 8 0 0 1 8 8 V108 Z" fill="#f9d1e0" stroke="#d6336c" stroke-width="1.5"/>
+<text x="580.0" y="95" text-anchor="middle" font-size="16" font-weight="700" fill="#5c1a33">enrollments</text>
+<rect x="440" y="114" width="28" height="16" rx="4" fill="#d6336c"/><text x="454" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">PK</text>
+<text x="478" y="127" font-size="14" fill="#212529" font-family="Consolas, monospace">id</text>
+<text x="718" y="127" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">bigint</text>
+<rect x="431" y="136" width="298" height="28" fill="#fff5f8"/>
+<rect x="440" y="142" width="28" height="16" rx="4" fill="#9c36b5"/><text x="454" y="154" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">FK</text>
+<text x="478" y="155" font-size="14" fill="#212529" font-family="Consolas, monospace">course_id</text>
+<text x="718" y="155" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<rect x="440" y="170" width="28" height="16" rx="4" fill="#9c36b5"/><text x="454" y="182" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">FK</text>
+<text x="478" y="183" font-size="14" fill="#212529" font-family="Consolas, monospace">student_id</text>
+<text x="718" y="183" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">bigint</text>
+<rect x="431" y="192" width="298" height="28" fill="#fff5f8"/>
+<text x="478" y="211" font-size="14" fill="#212529" font-family="Consolas, monospace">enrolled_at</text>
+<text x="718" y="211" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">timestamptz</text>
+<line x1="430" y1="220" x2="730" y2="220" stroke="#f3b6cc"/>
+<text x="580.0" y="239" text-anchor="middle" font-size="13" fill="#5c1a33" font-family="Consolas, monospace">UNIQUE (course_id, student_id)</text>
+<rect x="430" y="70" width="300" height="178" rx="8" fill="none" stroke="#d6336c" stroke-width="1.5"/>
+<text x="434" y="272" font-size="12" fill="#868e96">NOT NULL: all columns</text>
+<text x="434" y="290" font-size="12" fill="#868e96">DEFAULT enrolled_at = now()</text>
+<text x="434" y="308" font-size="12" fill="#868e96">INDEX enrollments_student_id_idx</text>
+<text x="434" y="326" font-size="12" fill="#868e96">id: GENERATED ALWAYS AS IDENTITY</text>
+<rect x="840" y="70" width="300" height="122" rx="8" fill="#fff"/>
+<path d="M840 108 V78 a8 8 0 0 1 8 -8 H1132 a8 8 0 0 1 8 8 V108 Z" fill="#f9d1e0" stroke="#d6336c" stroke-width="1.5"/>
+<text x="990.0" y="95" text-anchor="middle" font-size="16" font-weight="700" fill="#5c1a33">students</text>
+<rect x="850" y="114" width="28" height="16" rx="4" fill="#d6336c"/><text x="864" y="126" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">PK</text>
+<text x="888" y="127" font-size="14" fill="#212529" font-family="Consolas, monospace">id</text>
+<text x="1128" y="127" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">bigint</text>
+<rect x="841" y="136" width="298" height="28" fill="#fff5f8"/>
+<text x="888" y="155" font-size="14" fill="#212529" font-family="Consolas, monospace">name</text>
+<text x="1128" y="155" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<rect x="850" y="170" width="28" height="16" rx="4" fill="#e8590c"/><text x="864" y="182" text-anchor="middle" font-size="10" font-weight="700" fill="#fff">UK</text>
+<text x="888" y="183" font-size="14" fill="#212529" font-family="Consolas, monospace">email</text>
+<text x="1128" y="183" text-anchor="end" font-size="13" fill="#868e96" font-family="Consolas, monospace">text</text>
+<rect x="840" y="70" width="300" height="122" rx="8" fill="none" stroke="#d6336c" stroke-width="1.5"/>
+<text x="844" y="216" font-size="12" fill="#868e96">NOT NULL: all columns</text>
+<text x="844" y="234" font-size="12" fill="#868e96">CHECK length(name) >= 2</text>
+<text x="844" y="252" font-size="12" fill="#868e96">UNIQUE email</text>
+<text x="844" y="270" font-size="12" fill="#868e96">id: GENERATED ALWAYS AS IDENTITY</text>
+<path d="M320 122.0 H375.0 V150.0 H430" stroke="#5c1a33" stroke-width="1.6" fill="none"/>
+<path d="M328 115.0 V129.0 M334 115.0 V129.0" stroke="#5c1a33" stroke-width="1.6" fill="none"/>
+<path d="M416 150.0 L430 142.0 M416 150.0 L430 158.0" stroke="#5c1a33" stroke-width="1.6" fill="none"/><circle cx="410" cy="150.0" r="4" fill="#fff" stroke="#5c1a33" stroke-width="1.6"/>
+<text x="375.0" y="180.0" text-anchor="middle" font-size="11" font-weight="600" fill="#d6336c">ON DELETE</text>
+<text x="375.0" y="194.0" text-anchor="middle" font-size="11" font-weight="600" fill="#d6336c">RESTRICT</text>
+<path d="M840 122.0 H785.0 V178.0 H730" stroke="#5c1a33" stroke-width="1.6" fill="none"/>
+<path d="M832 115.0 V129.0 M826 115.0 V129.0" stroke="#5c1a33" stroke-width="1.6" fill="none"/>
+<path d="M744 178.0 L730 170.0 M744 178.0 L730 186.0" stroke="#5c1a33" stroke-width="1.6" fill="none"/><circle cx="750" cy="178.0" r="4" fill="#fff" stroke="#5c1a33" stroke-width="1.6"/>
+<text x="785.0" y="208.0" text-anchor="middle" font-size="11" font-weight="600" fill="#d6336c">ON DELETE</text>
+<text x="785.0" y="222.0" text-anchor="middle" font-size="11" font-weight="600" fill="#d6336c">CASCADE</text>
+<text x="580" y="404" text-anchor="middle" font-size="12" fill="#868e96">|| one (exactly one)   o&lt; zero or many   ·   a course has many enrollments, a student has many enrollments</text>
+</svg>
